@@ -10,7 +10,7 @@
 #pragma comment (lib,"ws2_32.lib")
 #include<ws2tcpip.h>
 #define LISTEN_PORT 99998
-#define LIATEN_BACKLOG 32
+#define LIATEN_BACKLOG 32  
 using namespace std;
 /*********************************************************************************
 *                   º¯ÊýÉùÃ÷

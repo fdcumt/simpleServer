@@ -3,9 +3,9 @@
 #include <process.h>
 #include <cstdio>
 
+extern unsigned gMainThreadID;
 
-// thread function
-
+// thread callback function
 namespace NS_ThreadFun
 {
 	unsigned __stdcall fun(void *param)
@@ -20,8 +20,7 @@ namespace NS_ThreadFun
 BaseThread::BaseThread()
 :m_hStartEvent(NULL),
  m_hThread(NULL),
- m_nThreadID(-1),
- m_bRunning(false)
+ m_nThreadID(-1)
 {
 }
 
@@ -32,7 +31,6 @@ BaseThread::~BaseThread()
 bool BaseThread::Runable()
 {
 	bool result = false;
-	m_bRunning = true;
 
 	// 创建互斥事件
 	m_hStartEvent = ::CreateEvent(0, FALSE, FALSE, 0); //create thread start event
@@ -86,7 +84,8 @@ unsigned BaseThread::fun()
 		return 1;
 	}
 
-	while (true && m_bRunning)
+
+	while (true)
 	{
 		if (PeekMessage(&msg, NULL, USR_MSG_BEGIN, USR_MSG_END, PM_REMOVE)) //get msg from message queue
 		{
@@ -98,7 +97,11 @@ unsigned BaseThread::fun()
 				printf("threadId::%d, recv %s\n", m_nThreadID, pInfo);
 				delete[] pInfo;
 
-				//printf("threadId::%d, recv %d\n", m_nThreadID, msg.wParam);
+				if (!PostThreadMessage(gMainThreadID, USR_MSG_BEGIN+10, m_nThreadID, 0))//post thread msg											  //if (!PostThreadMessage(myThread->GetThreadID(), MY_MSG, myThread->GetThreadID(), 0))//post thread msg
+				{
+					printf("send message to main thread failed,errno:%d\n", ::GetLastError());
+				}
+
 				break;
 			}
 			default:
@@ -114,3 +117,7 @@ unsigned BaseThread::fun()
 }
 
 
+void BaseThreadFun::func()
+{
+
+}

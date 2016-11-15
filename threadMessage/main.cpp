@@ -4,50 +4,12 @@
 
 #include "BaseThread/baseThread.h"
 
+unsigned gMainThreadID = -1;
+
 #define MY_MSG USR_MSG_BEGIN+1
 const int MAX_INFO_SIZE = 20;
 
-HANDLE hStartEvent; // thread start event
-HANDLE hStartEvent2; // thread start event
 
-					// thread function
-unsigned __stdcall fun(void *param)
-{
-	printf("thread fun start\n");
-
-	MSG msg;
-	PeekMessage(&msg, NULL, WM_USER, WM_USER, PM_NOREMOVE);
-
-	if (!SetEvent(hStartEvent)) //set thread start event 
-	{
-		printf("set start event failed,errno:%d\n", ::GetLastError());
-		return 1;
-	}
-
-	while (true)
-	{
-		if (PeekMessage(&msg, NULL, WM_USER, WM_USER+1000, PM_NOREMOVE)) //get msg from message queue
-		{
-			switch (msg.message)
-			{
-			case MY_MSG:
-			{
-				char * pInfo = (char *)msg.wParam;
-				printf("recv %s\n", pInfo);
-				delete[] pInfo;
-				break;
-			}
-			default:
-				printf("kong zhuan\n");
-			}
-		}
-		else 
-		{
-			//printf("kong zhuan\n");
-		}
-	};
-	return 0;
-}
 
 void sendMsg(BaseThread* myThread)
 {
@@ -61,11 +23,20 @@ void sendMsg(BaseThread* myThread)
 		delete[] pInfo;
 	}
 
-	::Sleep(1000);
+}
+
+void replyMsg(MSG msg, BaseThread* myThread)
+{
+	if (msg.wParam == myThread->GetThreadID())
+	{
+		sendMsg(myThread);
+	}
 }
 
 int main()
 {
+
+	gMainThreadID = (unsigned)GetCurrentThreadId();
 
 	BaseThread baseThread1;
 	BaseThread baseThread2;
@@ -76,56 +47,38 @@ int main()
 	baseThread3.Runable();
 	baseThread4.Runable();
 
+	sendMsg(&baseThread1);
+	sendMsg(&baseThread2);
+	sendMsg(&baseThread3);
+	sendMsg(&baseThread4);
+
+	::Sleep(1000);
+
+	MSG msg;
 
 	while (true)
 	{
-		sendMsg(&baseThread1);  
-		sendMsg(&baseThread2);  
-		sendMsg(&baseThread3);  
-		sendMsg(&baseThread4);  
-		::Sleep(1000);
-	}
-
-	return 0;
-
-	HANDLE hThread;
-	unsigned nThreadID;
-
-
-	hStartEvent = ::CreateEvent(0, FALSE, FALSE, 0); //create thread start event
-	if (hStartEvent == 0)
-	{
-		printf("create start event failed,errno:%d\n", ::GetLastError());
-		return 1;
-	} 
-
-	//start thread
-	hThread = (HANDLE)_beginthreadex(NULL, 0, &fun, NULL, 0, &nThreadID);
-	if (hThread == 0)
-	{
-		printf("start thread failed,errno:%d\n", ::GetLastError());
-		CloseHandle(hStartEvent);
-		return 1;
-	}
-
-	//wait thread start event to avoid PostThreadMessage return errno:1444
-	::WaitForSingleObject(hStartEvent, INFINITE);
-	CloseHandle(hStartEvent);
-
-	int count = 0;
-	while (true)
-	{
-		char* pInfo = new char[MAX_INFO_SIZE]; //create dynamic msg
-		sprintf_s(pInfo, MAX_INFO_SIZE-1, "msg_%d", ++count);
-		if (!PostThreadMessage(nThreadID, MY_MSG, (WPARAM)pInfo, 0))//post thread msg
+		if (PeekMessage(&msg, NULL, USR_MSG_BEGIN, USR_MSG_END, PM_REMOVE)) //get msg from message queue
 		{
-			printf("post message failed,errno:%d\n", ::GetLastError());
-			delete[] pInfo;
+			switch (msg.message)
+			{
+			case USR_MSG_BEGIN + 10:
+			{
+				replyMsg(msg, &baseThread1);
+				replyMsg(msg, &baseThread2);
+				replyMsg(msg, &baseThread3);
+				replyMsg(msg, &baseThread4);
+				break;
+			}
+			default:
+				printf("1111111111111\n");
+			}
 		}
-		::Sleep(1000);
+		system("pause");
+
+
 	}
 
-	CloseHandle(hThread);
 	return 0;
 }
 /*

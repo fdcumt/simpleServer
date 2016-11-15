@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="main">
+      <UniqueIdentifier>{859035ab-2a4b-4a44-a3e8-c5303934becb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="baseThread">
+      <UniqueIdentifier>{895aaad0-9a8b-46f4-b0a9-1b29d75fb0ac}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseThread\baseThread.cpp">
+      <Filter>baseThread</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BaseThread\baseThread.h">
+      <Filter>baseThread</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
